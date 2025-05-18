@@ -1,0 +1,14 @@
+[project]
+name = "markov-switching"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "fredapi>=0.5.2",
+    "matplotlib>=3.10.3",
+    "notebook>=7.4.2",
+    "numpy>=2.2.6",
+    "pandas>=2.2.3",
+    "seaborn>=0.13.2",
+    "statsmodels>=0.14.4",
+]
