@@ -2,22 +2,48 @@
 
 ---
 ### Models:
-- ```.\MS-AR\``` contains modelling for a simple univariate MS-AR (markov-switching autoregressive) model
-  - $y_t = \mu_{s_{t}} + \Phi_{s_{t}}y_{t-1} + \epsilon_t, \epsilon $
+- ```.\MS-AR\``` contains modelling for a simple univariate MS-AR(1) (markov-switching autoregressive) model
+  $$y_t = \mu_{s_{t}} + \Phi_{s_{t}}y_{t-1} + \epsilon_t, \epsilon_t \sim \mathcal{N}(0,\mu^2_{s_{t}})$$
+  $$where\space S_{t}\in\{1,...,K\}$$
   - *i.e.*, uses a single target variable (in this case GDP YoY %, i.e. $\frac{GDP_{t}}{GDP_{t-4}} * 100\%$ given quarterly data) and assumes autocorrelation switches, as well as mean and variance switching between regimes 
-    - cons include omitting comovements in labor, inflation, credit spreads, etc. and susceptability to idosyncratic noise in GDP (revisions, seasonality, etc.)
+    - cons: obviously misses the whole picture, omitting labor, inflation, credit spreads, etc. and susceptability to idosyncratic noise in GDP (revisions, seasonality, etc.)
   - Initially estimate k=2 states (keeping with the idea of simplicity for the univariate model) as this only gives four regime parameters (two means, two variances) + the 4x4 transition matrix
     - this also makes intuitive sense when targeting GDP as two states can represent *expansion* and *contraction* which can then be mapped to NBER "recession/not" calls for validation
     - Using 3 states would be good for capturing nuance (i.e. "good", "base", "bad" = "overheated growth", "garden variety growth/mild slowdown", and "full blown recession") but I'll leave this for the future, just want a MVP prototype for now as that would introduce a much greater complexity cost
-- ```.\Multivariate\``` contains modelling for a multivariate MS-AR model
-  - *i.e.*, uses **[VARIABLES]**
-    - pros include capturing richer dynamics from different corners of the macroeconomic system and robustness to noise in any single series
-    - cons include risk of overfitting and increased comlexity on all fronts
+  - could have used a multivariate hidden markov model (HMM) for the primary goal of regime identification (if don't care about what happens within each regime and just want to extract transition probabilities and $\mu_{s_{t}}$ & $\sigma^2_{s_{t}}$):
+    - assumes i.i.d. (given the state)
+    - macro time series data exhibits autocorrelation within regimes and MS-AR(1) isn't too much more complex so I wanted to try that instead
+- ```.\Multivariate\``` contains modelling for a multivariate markov-switching models
+  - *i.e.*, uses:
+    - real GDP
+    - inflation
+    - short term interest rates (3mo)
+    - long term interest rates (10y)
+    - unemplyment rate
+  - there are multiple ways to approach this:
+    1. use the 5 series' directly:
+       1. multivariate HMM  
+       2. Markov Switching Vector Autoregressive (MS-VAR) model
+          - intercepts, AR coefficients, and covariance matrix all switch between regimes
+          - however, large number of parameters, even with only the 5
+    2. dimensionality reduction via static PCA
+       1. fitting either HMM or MS-AR model on a single extracted principal component (PC)
+       2. fitting either multivariate HMM or MS-VAR model on 2-3 extracted PCs 
+    3. dimensionality reduction via DFM
+       1. fitting either HMM or MS-AR model on a single extracted latent factor
+       2. fitting either multivariate HMM or MS-VAR model on 2-3 extracted factors
+    - directly using the factors results in a much simpler pipeline as you just feed the 5-d vector into the HMM, howeve:-
+      - you get a parameter explosion with scales very poorly when adding more variables (e.g. adding industry data as well)
+      - risk overfitting and get noisy regime calls
+    - using PCA you can collapse onto 1-3 orthogonal PCs that explain the variance, however:
+      - PCs ignore the time dynamics and compresses based on variance, not cycles, potentially causing the PCs to pick up noise-driven regimes
+    - using factors are dynamic and are estimated with serial correlation in mind, however:
+      - more complex to set up vs. the simplicity of PCA (or just no dimensionality reduction at all)
 
 ---
 ### Notes:
-- whichever markov-switching model is chosen (or multiple), we can then extract the estimated regime specific moments and transition matrix to be used in the monte-carlo method
-- a decently comprehensive, "full scale" model in the future should try utilizing a Dynamic Factor Model for distillation of 2-3 latent factors from a greater number of macroeconomic/industry/financial variables and let those factors switch regimes (see the pipeline diagram below)
+- whichever markov-switching model is chosen (or multiple), you can then extract the estimated regime specific moments and transition matrix to be used in the monte-carlo method
+- a decently comprehensive, "full scale" model in the future would probably utilize a Dynamic Factor Model for distillation of 2-3 latent factors from a greater number of macroeconomic/industry/financial variables and let those factors switch regimes (see the pipeline diagram below)
   - this keeps the state-space small but information-rich
   - this does however increase inherent complexity as it requires a "two-stage" estimation process (estimating latent factors first, then modelling regime switching on the factors, and then 'reconstructing' the observed variables)
 ```mermaid
