@@ -54,7 +54,7 @@
 
 ---
 ### Notes:
-- whichever markov-switching model is chosen (or multiple), you can then extract the estimated regime specific moments and transition probability matrix to be used in the monte-carlo method
+- whichever markov-switching model is chosen (or multiple), you can then extract the estimated regime specific moments and transition probability matrix to be used in a monte-carlo method
 - this entire repo is entirely meant to be a first-pass attempt at getting more familiar with markov-switching models and/or provide an MVP prototype
 - a decently comprehensive, "full scale" model in the future would probably utilize a Dynamic Factor Model for distillation of 2-3 latent factors from a greater number of macroeconomic/industry/financial variables and let those factors switch regimes (see the pipeline diagram below)
   - this keeps the state-space small but information-rich
