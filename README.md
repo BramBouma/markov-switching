@@ -4,8 +4,7 @@
 ---
 ### Models:
 >[!IMPORTANT]
->everything below pretty much just served as my notes that I wrote aimlessly as I went along and are not meant to represent any form of comprehensive documentiation whatsoever.  
->This whole repo is essentially no more than just me trying to apply learnings about markov-switching. It was also not checked for any grammatical or spelling mistakes - I have no doubt that it is teeming
+>everything below pretty much just served as my notes that I wrote aimlessly as I went along and are not meant to represent any form of comprehensive documentiation whatsoever. This whole repo is essentially no more than just me trying to apply learnings about markov-switching. It was also not checked for any grammatical or spelling mistakes - I have no doubt that it is teeming
 - ```.\MS-AR\``` contains modelling for a simple univariate MS-AR(1) (markov-switching autoregressive) model
   $$y_t = \mu_{s_{t}} + \Phi_{s_{t}}y_{t-1} + \epsilon_t, \epsilon_t \sim \mathcal{N}(0,\mu^2_{s_{t}})$$
   $$where\space S_{t}\in\{1,...,K\}$$
