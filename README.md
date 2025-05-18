@@ -1,7 +1,11 @@
 # Brief prototyping of Markov-Switching models for macroeconomic regime estimation
 
+
 ---
 ### Models:
+>[!IMPORTANT]
+>everything below pretty much just served as my notes that I wrote aimlessly as I went along and are not meant to represent any form of comprehensive documentiation whatsoever
+>this whole repo is essentially no more than just me trying to apply learnings about markov-switching 
 - ```.\MS-AR\``` contains modelling for a simple univariate MS-AR(1) (markov-switching autoregressive) model
   $$y_t = \mu_{s_{t}} + \Phi_{s_{t}}y_{t-1} + \epsilon_t, \epsilon_t \sim \mathcal{N}(0,\mu^2_{s_{t}})$$
   $$where\space S_{t}\in\{1,...,K\}$$
@@ -32,20 +36,29 @@
     3. dimensionality reduction via DFM
        1. fitting either HMM or MS-AR model on a single extracted latent factor
        2. fitting either multivariate HMM or MS-VAR model on 2-3 extracted factors
-    - directly using the factors results in a much simpler pipeline as you just feed the 5-d vector into the HMM, howeve:-
-      - you get a parameter explosion with scales very poorly when adding more variables (e.g. adding industry data as well)
+    - directly using the macro series' is a much simpler pipeline as you just feed the 5-vars into the HMM, howeve:-
+      - you get a parameter explosion which scales very poorly when adding more variables (e.g. adding industry data as well) - see [this recent paper](https://arxiv.org/abs/2503.11499) regarding regime detection that uses the [FRED-MD / FRED-QD](https://www.stlouisfed.org/research/economists/mccracken/fred-databases) datasets which include >100 macro series'
       - risk overfitting and get noisy regime calls
     - using PCA you can collapse onto 1-3 orthogonal PCs that explain the variance, however:
       - PCs ignore the time dynamics and compresses based on variance, not cycles, potentially causing the PCs to pick up noise-driven regimes
     - using factors are dynamic and are estimated with serial correlation in mind, however:
       - more complex to set up vs. the simplicity of PCA (or just no dimensionality reduction at all)
+  - I only tried hidden markov models here:
+    - `.\Multivariate\Direct-GaussianHMM.ipynb` is directly feeding the five macro variables into a HMM without dimensionality reduction
+    - `.\Multivariate\PCA-GaussianHMM.ipynb` is first reducing dimensionality with PCA, then feeding the PCs into the HMM
+    - `.\Multivariate\DFM-GaussianHMM.ipynb` is first reducing dimensionality with a DFM, then feeding the extracted factors into the HMM
+      - I do think that the best approach is using a DFM (especially if more variables are added, making direct HMM unfeasable), despite getting the afformentioned increase in complexity
+      - going forward I really want to try the same approaches but with a markov-switching vector autoregression (MS-VAR) model instead of the HMM because there's definitely serial correlation in there
+      - I would also like to do more directly comparing the approaches, as I haven't done that yet
+      - I have a pile of [various sources](#assorted-non-exhaustive-list-of-sources-that-i-accumulated) at the bottom that I pulled from (also, ChatGPT was a great source for asking questions about model assumptions, differences between various models, etc.)
 
 ---
 ### Notes:
-- whichever markov-switching model is chosen (or multiple), you can then extract the estimated regime specific moments and transition matrix to be used in the monte-carlo method
+- whichever markov-switching model is chosen (or multiple), you can then extract the estimated regime specific moments and transition probability matrix to be used in the monte-carlo method
+- this entire repo is entirely meant to be a first-pass attempt at getting more familiar with markov-switching models and/or provide an MVP prototype
 - a decently comprehensive, "full scale" model in the future would probably utilize a Dynamic Factor Model for distillation of 2-3 latent factors from a greater number of macroeconomic/industry/financial variables and let those factors switch regimes (see the pipeline diagram below)
   - this keeps the state-space small but information-rich
-  - this does however increase inherent complexity as it requires a "two-stage" estimation process (estimating latent factors first, then modelling regime switching on the factors, and then 'reconstructing' the observed variables)
+  - again, this does increase inherent complexity as it requires a "two-stage" estimation process (estimating latent factors first, then modelling regime switching on the factors, and then 'reconstructing' the observed variables)
 ```mermaid
 flowchart TD
     A[Data Collection:<br/>Macro/Financial Series]
@@ -76,13 +89,14 @@ flowchart TD
 
 ---
 ### Structure:
-- largely relies on ```statsmodels``` module, they provide great methods for regime-switching models
+- largely relies on `statsmodels`, `sklearn`, and `hmmlearn` modules, they're really great
   - they also provide some really good example demonstrations:
     - [Markov Switching Autoregression Models](https://www.statsmodels.org/dev/examples/notebooks/generated/markov_autoregression.html)
     - [Markov Switching Dynamic Regression Models](https://www.statsmodels.org/dev/examples/notebooks/generated/markov_regression.html)
 - just Python Notebooks for exploration/research purposes
-  - it should run smoothly from top-to-bottom, can either run from **[NEXT]**
-  - data is simply grabbed via FRED api, need "FRED_API_KEY" stored in environment variables if re-running ```data.ipynb```
+  - it should run smoothly from top-to-bottom, **however:**
+    - need "FRED_API_KEY" stored in environment variables if re-running `data.ipynb`
+    - data is simply grabbed via FRED api
   - A full package structure for a production markov-switching model could look something like the following (or could look different):
 ```aiignore
 regime-switching/
@@ -99,3 +113,26 @@ regime-switching/
 └── notebooks/
     └── 01_explore_fit.ipynb     # ad‑hoc EDA
 ```
+
+---
+### Assorted non-exhaustive list of sources that I accumulated:
+ - *most were found by ChatGPT
+ - [hmmlearn tutorial](https://hmmlearn.readthedocs.io/en/latest/tutorial.html)
+ - [hmmlearn api reference](https://hmmlearn.readthedocs.io/en/latest/api.html)
+ - [Multivariate Hidden Markov Models: A Powerful Tool for Sequence Analysis](https://medium.com/%40aisagescribe/multivariate-hidden-markov-models-a-powerful-tool-for-sequence-analysis-9ec7729ae1ae)
+ - [Fitting a multivariate GMHMM in hmmlearn - stack overflow](https://stackoverflow.com/questions/52141332/is-it-possible-to-fit-a-multivariate-gmhmm-in-hmmlearn)
+ - [Fitting Hidden Markov Models Part II](https://waterprogramming.wordpress.com/2018/07/03/fitting-hidden-markov-models-part-ii-sample-python-script/)
+ - [fitting multiple time series](https://github.com/hmmlearn/hmmlearn/issues/128)
+ - [gaussian hidden markov models](https://datascience.oneoffcoder.com/gaussian-hmm.html)
+ - [hmmlearn - QuantConnect](https://www.quantconnect.com/docs/v2/writing-algorithms/machine-learning/popular-libraries/hmmlearn)
+ - [sampling from and decoding an HMM](https://hmmlearn.readthedocs.io/en/latest/auto_examples/plot_hmm_sampling_and_decoding.html)
+ - [A Markov Regime Switching Approach to Characterizing Financial Time Series](https://medium.com/%40cemalozturk/a-markov-regime-switching-approach-to-characterizing-financial-time-series-a5226298f8e1)
+ - [Regime Switching Models for Time Series Analysis in Python](https://medium.com/%40kylejones_47003/regime-switching-models-for-time-series-analysis-in-python-aaee8398ef13)
+ - [Markov Switching Dynamic Regression Model](https://medium.com/%40NNGCap/markov-switching-dynamic-regression-model-2a558251c293)
+ - [MS-AR to replicate Hamilton's markov switching model - stack overflow](https://stackoverflow.com/questions/42796743/python-statsmodel-tsa-markovautoregression-using-current-real-gnp-gdp-data)
+ - [Markov switching autoregression models](https://www.chadfulton.com/topics/markov_autoregression.html)
+ - [markov_autoregression.py - example](https://gitlab.ruhr-uni-bochum.de/hidalggc/anaconda-environment-backup/-/blob/5e52d9bf614aacc276d34b5ece6d07211ca4a4fa/anipose_backup/Lib/site-packages/statsmodels/tsa/regime_switching/markov_autoregression.py)
+ - [Python for Regime-Switching Models in Quantitative Finance](https://medium.com/%40deepml1818/python-for-regime-switching-models-in-quantitative-finance-c54d2710f71b)
+ - [SO question about getting prediction from HMM](https://stackoverflow.com/questions/44350447/hmmlearn-how-to-get-the-prediction-for-the-hidden-state-probability-at-time-t1)
+ - [SO question about getting emission matrix from GaussianHMM](https://stackoverflow.com/questions/40988173/how-to-get-emission-matrix-from-gaussianhmm-model-in-hmmlearn)
+ - [Gaussian HMM of stock data](https://hmmlearn.readthedocs.io/en/0.2.0/auto_examples/plot_hmm_stock_analysis.html)
