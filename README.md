@@ -4,8 +4,7 @@
 ---
 ### Models:
 >[!IMPORTANT]
->everything below pretty much just served as my notes that I wrote aimlessly as I went along and are not meant to represent any form of comprehensive documentiation whatsoever
->this whole repo is essentially no more than just me trying to apply learnings about markov-switching 
+>everything below pretty much just served as my notes that I wrote aimlessly as I went along and are not meant to represent any form of comprehensive documentiation whatsoever. This whole repo is essentially no more than just me trying to apply learnings about markov-switching. It was also not checked for any grammatical or spelling mistakes - I have no doubt that it is teeming
 - ```.\MS-AR\``` contains modelling for a simple univariate MS-AR(1) (markov-switching autoregressive) model
   $$y_t = \mu_{s_{t}} + \Phi_{s_{t}}y_{t-1} + \epsilon_t, \epsilon_t \sim \mathcal{N}(0,\mu^2_{s_{t}})$$
   $$where\space S_{t}\in\{1,...,K\}$$
@@ -36,25 +35,25 @@
     3. dimensionality reduction via DFM
        1. fitting either HMM or MS-AR model on a single extracted latent factor
        2. fitting either multivariate HMM or MS-VAR model on 2-3 extracted factors
-    - directly using the macro series' is a much simpler pipeline as you just feed the 5-vars into the HMM, howeve:-
-      - you get a parameter explosion which scales very poorly when adding more variables (e.g. adding industry data as well) - see [this recent paper](https://arxiv.org/abs/2503.11499) regarding regime detection that uses the [FRED-MD / FRED-QD](https://www.stlouisfed.org/research/economists/mccracken/fred-databases) datasets which include >100 macro series'
-      - risk overfitting and get noisy regime calls
-    - using PCA you can collapse onto 1-3 orthogonal PCs that explain the variance, however:
-      - PCs ignore the time dynamics and compresses based on variance, not cycles, potentially causing the PCs to pick up noise-driven regimes
-    - using factors are dynamic and are estimated with serial correlation in mind, however:
-      - more complex to set up vs. the simplicity of PCA (or just no dimensionality reduction at all)
+  - directly using the macro series' is a much simpler pipeline as you just feed the 5-vars into the HMM, howeve:-
+    - you get a parameter explosion which scales very poorly when adding more variables (e.g. adding industry data as well) - see [this recent paper](https://arxiv.org/abs/2503.11499) regarding regime detection that uses the [FRED-MD / FRED-QD](https://www.stlouisfed.org/research/economists/mccracken/fred-databases) datasets which include >100 macro series'
+    - risk overfitting and get noisy regime calls
+  - using PCA you can collapse onto 1-3 orthogonal PCs that explain the variance, however:
+    - PCs ignore the time dynamics and compresses based on variance, not cycles, potentially causing the PCs to pick up noise-driven regimes
+  - using factors are dynamic and are estimated with serial correlation in mind, however:
+    - more complex to set up vs. the simplicity of PCA (or just no dimensionality reduction at all)
   - I only tried hidden markov models here:
     - `.\Multivariate\Direct-GaussianHMM.ipynb` is directly feeding the five macro variables into a HMM without dimensionality reduction
     - `.\Multivariate\PCA-GaussianHMM.ipynb` is first reducing dimensionality with PCA, then feeding the PCs into the HMM
     - `.\Multivariate\DFM-GaussianHMM.ipynb` is first reducing dimensionality with a DFM, then feeding the extracted factors into the HMM
-      - I do think that the best approach is using a DFM (especially if more variables are added, making direct HMM unfeasable), despite getting the afformentioned increase in complexity
-      - going forward I really want to try the same approaches but with a markov-switching vector autoregression (MS-VAR) model instead of the HMM because there's definitely serial correlation in there
-      - I would also like to do more directly comparing the approaches, as I haven't done that yet
-      - I have a pile of [various sources](#assorted-non-exhaustive-list-of-sources-that-i-accumulated) at the bottom that I pulled from (also, ChatGPT was a great source for asking questions about model assumptions, differences between various models, etc.)
+    - I do think that the best approach is using a DFM (especially if more variables are added, making direct HMM unfeasable), despite getting the afformentioned increase in complexity
+    - going forward I really want to try the same approaches but with a markov-switching vector autoregression (MS-VAR) model instead of the HMM because there's definitely serial correlation in there
+    - I would also like to do more directly comparing the approaches, as I haven't done that yet
+    - I have a pile of [various sources](#assorted-non-exhaustive-list-of-sources-that-i-accumulated) at the bottom that I pulled from (also, ChatGPT was a great source for asking questions about model assumptions, differences between various models, etc.)
 
 ---
 ### Notes:
-- whichever markov-switching model is chosen (or multiple), you can then extract the estimated regime specific moments and transition probability matrix to be used in the monte-carlo method
+- whichever markov-switching model is chosen (or multiple), you can then extract the estimated regime specific moments and transition probability matrix to be used in a monte-carlo method
 - this entire repo is entirely meant to be a first-pass attempt at getting more familiar with markov-switching models and/or provide an MVP prototype
 - a decently comprehensive, "full scale" model in the future would probably utilize a Dynamic Factor Model for distillation of 2-3 latent factors from a greater number of macroeconomic/industry/financial variables and let those factors switch regimes (see the pipeline diagram below)
   - this keeps the state-space small but information-rich
