@@ -1,4 +1,4 @@
-# Brief prototyping of Markov-Switching models for macroeconomic regime estimation
+# Brief prototyping of dimensionality reduction and Markov-Switching models for macroeconomic regime estimation
 
 
 ---
